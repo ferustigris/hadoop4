@@ -15,7 +15,6 @@ public class LineNumberingMapper extends MapReduceBase implements
         int i = url.lastIndexOf(":");
         String filename = url.substring(0, i);
         System.out.println(filename);
-        reporter.getCounter(LineNumbering.AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER, filename).increment(1);
         file.set(filename);
         out.collect(file, value);
     }

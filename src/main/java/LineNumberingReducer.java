@@ -1,25 +1,31 @@
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reporter;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class LineNumberingReducer extends MapReduceBase implements
         org.apache.hadoop.mapred.Reducer<Text, Text, LongWritable, Text> {
-    ArrayList<String> paths = new ArrayList<String>();
+    Map<String, Integer> paths = new TreeMap<String, Integer>();
     LongWritable ln = new LongWritable();
 
     public void configure(JobConf job) {
         System.out.println("conf");
         try {
-            File f = new File("./files");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(LineNumbering.LINES_AMOUNTS_MAP))));
             String line = reader.readLine();
             while (line != null) {
                 System.out.println("line: " + line);
-                paths.add(line);
+                String rec[] = line.split("\\s");
+                String path = rec[0];
+                Integer count = Integer.valueOf(rec[1]);
+                paths.put(path, count);
                 line = reader.readLine();
             }
         } catch (IOException e) {
@@ -29,14 +35,14 @@ public class LineNumberingReducer extends MapReduceBase implements
 
     public void reduce(Text filename, Iterator<Text> values, OutputCollector<LongWritable, Text> out, Reporter reporter) throws IOException {
         long lineNumber = 0;
-        for(String path: paths) {
+        for(String path: paths.keySet()) {
             System.out.println("path    : " + path);
             System.out.println("filename: " + filename);
             if (filename.toString().equals(path)) {
                 System.out.println("break!");
                 break;
             }
-            lineNumber += reporter.getCounter(LineNumbering.AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER, path).getValue();
+            lineNumber += paths.get(path);
             System.out.println("lineNumber: " + lineNumber);
 
         }

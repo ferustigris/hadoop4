@@ -1,41 +1,34 @@
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Counter;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 public class LineNumbering {
     public static final String AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER = "amountOfLinesInInputFiles";
-    public static final String FILES_LIST_PATH = "/home/asd/files.csv";
-    public static final String HDFS_URL = "hdfs://asd-H67M-D2:9000";
+    public static final String LINES_AMOUNTS_MAP = "./lines_amount_map.csv";
 
     public static void main(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InterruptedException {
-
         if(args.length < 2) {
             throw new IllegalArgumentException("Not enough args");
         }
 
         //Creating a JobConf object and assigning a job name for identification purposes
         JobConf conf = new JobConf(LineNumbering.class);
-        conf.setJobName("IPCount");
-
-        //Setting configuration object with the Data Type of output Key and Value
-        conf.setOutputKeyClass(LongWritable.class);
-        conf.setOutputValueClass(Text.class);
+        conf.setJobName("LinesAmount");
 
         //Setting configuration object with the Data Type of output Key and Value of mapper
         conf.setMapOutputKeyClass(Text.class);
         conf.setMapOutputValueClass(Text.class);
 
         //Providing the mapper and reducer class names
-        conf.setMapperClass(LineNumberingMapper.class);
-        conf.setReducerClass(LineNumberingReducer.class);
+        conf.setMapperClass(LinesAmountMapper.class);
 
         //Setting format of input and output
         conf.setInputFormat(TextInputFormat.class);
@@ -47,26 +40,24 @@ public class LineNumbering {
         }
         FileOutputFormat.setOutputPath(conf, new Path("out"));
 
-        Job j = addFilesMapToCache(conf, args);
-        j.waitForCompletion(true);
-
         //Running the job
-        //RunningJob j = JobClient.runJob(conf);
+        RunningJob j = JobClient.runJob(conf);
 
+        File f = new File(LINES_AMOUNTS_MAP);
 
-    }
-
-    private static Job addFilesMapToCache(JobConf conf, String[] paths) throws URISyntaxException, IOException {
-        conf.set("fs.default.name", HDFS_URL);
-        FileSystem fileSystem = FileSystem.get(conf);
-        // results output
-        FSDataOutputStream out = fileSystem.create(new Path(FILES_LIST_PATH));
-        for(String path: paths) {
-            out.writeBytes(path + "\n");
+        BufferedWriter out = new BufferedWriter(new FileWriter(f));
+        for (Counter c: j.getCounters().getGroup(AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER)) {
+            out.write(c.getDisplayName() + " " + c.getValue() + "\n");
         }
+        out.close();
 
-        Job j = Job.getInstance(conf);
-        j.addCacheFile(new URI(FILES_LIST_PATH + "#files"));
-        return j;
+        //Setting configuration object with the Data Type of output Key and Value
+        conf.setOutputKeyClass(LongWritable.class);
+        conf.setOutputValueClass(Text.class);
+        conf.setMapperClass(LineNumberingMapper.class);
+        conf.setReducerClass(LineNumberingReducer.class);
+        FileOutputFormat.setOutputPath(conf, new Path("out2"));
+
+        JobClient.runJob(conf);
     }
 }
