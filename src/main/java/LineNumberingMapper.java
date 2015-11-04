@@ -11,9 +11,12 @@ public class LineNumberingMapper extends MapReduceBase implements
     Text file = new Text();
 
     public void map(LongWritable key, Text value, OutputCollector<Text, Text> out, Reporter reporter) throws IOException {
-        System.out.println(reporter.getInputSplit());
-        reporter.getCounter(LineNumbering.AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER, reporter.getInputSplit().toString()).increment(1);
-        file.set(reporter.getInputSplit().toString());
+        String url = reporter.getInputSplit().toString();
+        int i = url.lastIndexOf(":");
+        String filename = url.substring(0, i);
+        System.out.println(filename);
+        reporter.getCounter(LineNumbering.AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER, filename).increment(1);
+        file.set(filename);
         out.collect(file, value);
     }
 }

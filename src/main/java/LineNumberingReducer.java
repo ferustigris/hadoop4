@@ -1,10 +1,6 @@
-import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,14 +12,13 @@ public class LineNumberingReducer extends MapReduceBase implements
     LongWritable ln = new LongWritable();
 
     public void configure(JobConf job) {
-        FileSystem fileSystem = null;
+        System.out.println("conf");
         try {
-            fileSystem = FileSystem.get(job);
-            // results output
-            FSDataInputStream in = fileSystem.open(new Path(LineNumbering.FILES_LIST_PATH));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            File f = new File("./files");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
             String line = reader.readLine();
             while (line != null) {
+                System.out.println("line: " + line);
                 paths.add(line);
                 line = reader.readLine();
             }
@@ -35,10 +30,14 @@ public class LineNumberingReducer extends MapReduceBase implements
     public void reduce(Text filename, Iterator<Text> values, OutputCollector<LongWritable, Text> out, Reporter reporter) throws IOException {
         long lineNumber = 0;
         for(String path: paths) {
-            if (filename.toString().contains(path)) {
+            System.out.println("path    : " + path);
+            System.out.println("filename: " + filename);
+            if (filename.toString().equals(path)) {
+                System.out.println("break!");
                 break;
             }
             lineNumber += reporter.getCounter(LineNumbering.AMOUNT_OF_LINES_IN_INPUT_FILES_COUNTER, path).getValue();
+            System.out.println("lineNumber: " + lineNumber);
 
         }
 

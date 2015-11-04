@@ -4,7 +4,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.mapreduce.filecache.DistributedCache;
+import org.apache.hadoop.mapreduce.Job;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,7 +15,7 @@ public class LineNumbering {
     public static final String FILES_LIST_PATH = "/home/asd/files.csv";
     public static final String HDFS_URL = "hdfs://asd-H67M-D2:9000";
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InterruptedException {
 
         if(args.length < 2) {
             throw new IllegalArgumentException("Not enough args");
@@ -47,15 +47,16 @@ public class LineNumbering {
         }
         FileOutputFormat.setOutputPath(conf, new Path("out"));
 
-        addFilesMapToCache(conf, args);
+        Job j = addFilesMapToCache(conf, args);
+        j.waitForCompletion(true);
 
         //Running the job
-        RunningJob j = JobClient.runJob(conf);
+        //RunningJob j = JobClient.runJob(conf);
 
 
     }
 
-    private static void addFilesMapToCache(JobConf conf, String[] paths) throws URISyntaxException, IOException {
+    private static Job addFilesMapToCache(JobConf conf, String[] paths) throws URISyntaxException, IOException {
         conf.set("fs.default.name", HDFS_URL);
         FileSystem fileSystem = FileSystem.get(conf);
         // results output
@@ -64,6 +65,8 @@ public class LineNumbering {
             out.writeBytes(path + "\n");
         }
 
-        DistributedCache.addCacheFile(new URI(FILES_LIST_PATH), conf);
+        Job j = Job.getInstance(conf);
+        j.addCacheFile(new URI(FILES_LIST_PATH + "#files"));
+        return j;
     }
 }
