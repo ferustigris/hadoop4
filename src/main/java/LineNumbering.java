@@ -1,3 +1,4 @@
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -8,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 public class LineNumbering {
@@ -50,6 +52,8 @@ public class LineNumbering {
             out.write(c.getDisplayName() + " " + c.getValue() + "\n");
         }
         out.close();
+
+        DistributedCache.addCacheFile(new URI(LINES_AMOUNTS_MAP), conf);
 
         //Setting configuration object with the Data Type of output Key and Value
         conf.setOutputKeyClass(LongWritable.class);
