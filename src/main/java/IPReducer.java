@@ -15,9 +15,11 @@ public class IPReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
         mos = new MultipleOutputs(context);
     }
 
-    public void reduce(Text ip, Iterator<IntWritable> values, Reducer.Context context) throws IOException, InterruptedException {
-        while (values.hasNext()) {
-            context.write(ip, new IntWritable(values.next().get()));
+    @Override
+    protected void reduce(Text ip, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        Iterator<IntWritable> i = values.iterator();
+        while (i.hasNext()) {
+            context.write(ip, new IntWritable(i.next().get()));
         }
 
         mos.write("text", 1, new Text("Hello"));

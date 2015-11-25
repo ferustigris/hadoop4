@@ -10,7 +10,7 @@ public class IPMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
     IntWritable count = new IntWritable();
 
     protected void map(LongWritable key, Text value, Mapper.Context context) throws IOException, InterruptedException {
-        context.write(new IntWritable(1), value);
+        context.write(value, new IntWritable(1));
     }
 
 }

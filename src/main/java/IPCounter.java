@@ -23,13 +23,19 @@ public class IPCounter {
 
         job.setJarByClass(IPCounter.class);
         job.setMapperClass(IPMapper.class);
-        //job.setCombinerClass(WebBytesReducer.class);
+        //job.setCombinerClass(IPCombiner.class);
         job.setReducerClass(IPReducer.class);
-        job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(Text.class);
+
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+
+        job.setNumReduceTasks(3);
+
         job.setOutputFormatClass(TextOutputFormat.class);
+
         FileInputFormat.addInputPath(job, new Path(args[0]));
         TextOutputFormat.setOutputPath(job, new Path(args[1]));
 
